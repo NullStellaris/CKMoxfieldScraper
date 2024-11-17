@@ -1,2 +1,3 @@
 node_modules
 .venv
+cypress/fixtures/example.json
