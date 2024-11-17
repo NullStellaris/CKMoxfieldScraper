@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moxfield CK Scraper</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Moxfield CK Card Scraper</h1>
+        <p>Enter decklist below in Moxfield export format e.g.<br>1 Jeweled Lotus (CMM) 396<br>1 Dockside Extortionist (2X2) 107</p>
+        <form id="textForm">
+            <textarea 
+                name="textInput" 
+                rows="10" 
+                placeholder="Enter text here (one line per row)"></textarea>
+            <button type="submit">Generate CK Pricelist</button>
+        </form>
+        <div id="result" style="margin-top: 20px;"></div>
+    </div>
+    <script>
+        const form = document.getElementById('textForm');
+        const resultDiv = document.getElementById('result');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const formData = new FormData(form);
+            const textInput = formData.get('textInput');
+
+            // Send input to the server
+            const response = await fetch('/generate-csv', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ textInput })
+            });
+
+            if (response.ok) {
+                const result= await response.json().then(data => data);
+                // Display the result as a table
+                resultDiv.innerHTML = `<table class="rtable">
+                    <thead>
+                        <tr>
+                            <th>Qty</th>
+                            <th>Name</th>
+                            <th>Set</th>
+                            <th>Coll #</th>
+                            <th>Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${result.map(card => `
+                            <tr>
+                                <td>${card.qty}</td>
+                                <td>${card.name}</td>
+                                <td>${card.set}</td>
+                                <td>${card.collectorNumber}</td>
+                                <td>$${card.price}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>`;
+            } else {
+                resultDiv.innerHTML = `<strong>Error:</strong> Unable to process input.`;
+            }
+        });
+    </script>
+</body>
+</html>
